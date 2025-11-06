@@ -33,7 +33,9 @@ jobs:
           docker run --rm \
             -v "${{ github.workspace }}/flyway/sql:/flyway/sql:ro" \
             -v "${{ github.workspace }}/flyway/conf:/flyway/conf:ro" \
-            -w /flyway/sql \
             flyway/flyway:latest \
-            -configFiles=/flyway/conf/flyway.conf \
+            -url=jdbc:postgresql://localhost:5432/demo_db \
+            -user=user \
+            -password=pass \
+            -locations=filesystem:/flyway/sql \
             migrate
