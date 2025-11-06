@@ -29,7 +29,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Flyway migrations
-        uses: flyway/flyway-action@v2
+        uses: red-gate/flyway-action@v2
+
         with:
           url: jdbc:postgresql://localhost:5432/demo_db
           user: user
