@@ -30,8 +30,10 @@ jobs:
 
       - name: Install Flyway
         run: |
-          wget -qO- https://download.red-gate.com/maven/release/org/flywaydb/flyway-commandline/11.0.0/flyway-commandline-11.0.0-linux-x64.tar.gz | tar xvz
+          curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/11.0.0/flyway-commandline-11.0.0-linux-x64.tar.gz -o flyway.tar.gz
+          tar -xzf flyway.tar.gz
           sudo ln -s `pwd`/flyway-11.0.0/flyway /usr/local/bin/flyway
+
 
       - name: Wait for PostgreSQL to be ready
         run: |
