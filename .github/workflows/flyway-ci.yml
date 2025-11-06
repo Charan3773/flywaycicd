@@ -28,23 +28,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Install Flyway
+        run: |
+          wget -qO- https://download.red-gate.com/maven/release/org/flywaydb/flyway-commandline/11.0.0/flyway-commandline-11.0.0-linux-x64.tar.gz | tar xvz
+          sudo ln -s `pwd`/flyway-11.0.0/flyway /usr/local/bin/flyway
+
       - name: Wait for PostgreSQL to be ready
         run: |
-          for i in {1..15}; do
-            pg_isready -h localhost -p 5432 -U user && echo "Postgres is ready" && exit 0
-            echo "Waiting for Postgres..."
+          for i in {1..20}; do
+            pg_isready -h postgres -p 5432 -U user && echo "✅ Postgres is ready" && exit 0
+            echo "⏳ Waiting for Postgres..."
             sleep 3
           done
-          echo "Postgres did not start in time" && exit 1
+          echo "❌ Postgres did not start in time" && exit 1
 
       - name: Run Flyway migrations
         run: |
-          docker run --rm \
-            -v "${{ github.workspace }}/flyway/sql:/flyway/sql:ro" \
-            -v "${{ github.workspace }}/flyway/conf:/flyway/conf:ro" \
-            flyway/flyway:latest \
-            -url=jdbc:postgresql://localhost:5432/demo_db \
+          flyway \
+            -url=jdbc:postgresql://postgres:5432/demo_db \
             -user=user \
             -password=pass \
-            -locations=filesystem:/flyway/sql \
+            -locations=filesystem:flyway/sql \
             migrate
