@@ -12,41 +12,39 @@ jobs:
     services:
       postgres:
         image: postgres:15
+        ports:
+          - 5432:5432
         env:
           POSTGRES_DB: demo_db
           POSTGRES_USER: user
           POSTGRES_PASSWORD: pass
         options: >-
-          --health-cmd "pg_isready -U user -d demo_db"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 15
-        ports:
-          - 5432:5432
+          --health-cmd="pg_isready -U user -d demo_db"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Flyway CLI
-        run: |
-          curl -L https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/11.0.0/flyway-commandline-11.0.0-linux-x64.tar.gz -o flyway.tar.gz
-          tar -xzf flyway.tar.gz
-          sudo ln -s `pwd`/flyway-11.0.0/flyway /usr/local/bin/flyway
-
-      - name: Wait for Postgres to be ready
+      - name: Wait for PostgreSQL to be ready
         run: |
           for i in {1..30}; do
-            pg_isready -h postgres -p 5432 -U user && echo "✅ Postgres is ready" && break
+            pg_isready -h postgres -p 5432 -U user && echo "✅ Postgres is ready" && exit 0
             echo "⏳ Waiting for Postgres..."
             sleep 3
           done
+          echo "❌ Postgres not ready in time" && exit 1
 
       - name: Run Flyway migrations
         run: |
-          flyway \
-            -url=jdbc:postgresql://postgres:5432/demo_db \
+          docker run --rm \
+            --network host \
+            -v "${{ github.workspace }}/flyway/sql:/flyway/sql:ro" \
+            flyway/flyway:latest \
+            -url=jdbc:postgresql://localhost:5432/demo_db \
             -user=user \
             -password=pass \
-            -locations=filesystem:${{ github.workspace }}/flyway/sql \
+            -locations=filesystem:/flyway/sql \
             migrate
